@@ -58,15 +58,12 @@ and lets hospital staff manage schedules, medical records, and notifications.
 
 ### Appointment Booking Flow
 
-Patient logs in → Selects specialty → Chooses doctor →
-Picks date/time → Confirms → Notification sent → Doctor sees it on dashboard
 
 ![Appointment Booking Flow](./appointment_booking_workflow.jpg)
 
 ### Cancellation Flow
 
-Patient/Receptionist cancels → System validates → Slot freed →
-Notifications sent to both patient and doctor → Dashboard refreshed
+
 
 ![Cancellation Flow](./cancellation_workflow.png)
 ---
