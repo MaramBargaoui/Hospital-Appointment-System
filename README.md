@@ -3,7 +3,6 @@
 A web-based system that allows patients to book appointments with doctors,
 and lets hospital staff manage schedules, medical records, and notifications.
 
-**Backend:** Java (Spring Boot) | **Frontend:** Angular
 
 ---
 
