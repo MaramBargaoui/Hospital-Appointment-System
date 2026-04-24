@@ -71,12 +71,4 @@ Notifications sent to both patient and doctor → Dashboard refreshed
 ![Cancellation Flow](./cancellation_workflow.png)
 ---
 
-## Project Structure
 
-```
-hospital-appointment-system/
-├── backend/      <- Spring Boot (Java)
-├── frontend/     <- Angular
-├── docs/         <- Project documentation & diagrams
-└── README.md
-```
