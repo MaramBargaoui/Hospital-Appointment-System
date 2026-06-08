@@ -1,0 +1,171 @@
+<div class="shell">
+  <header class="top">
+    <div class="top-inner">
+      <div class="brand-row">
+        <a routerLink="/dashboard" class="brand-link">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span class="brand">Hospital portal</span>
+        </a>
+        <a routerLink="/dashboard" class="nav-pill nav-pill-muted">
+          <span class="nav-pill-icon" aria-hidden="true">←</span>
+          Dashboard
+        </a>
+      </div>
+      @if (auth.user(); as u) {
+        <div class="user-strip">
+          <div class="user-meta">
+            <span class="user-name">{{ u.firstName }} {{ u.lastName }}</span>
+            <span class="role-badge">{{ u.role }}</span>
+          </div>
+          <button type="button" class="btn-signout" (click)="logout()">Sign out</button>
+        </div>
+      }
+    </div>
+  </header>
+
+  <div class="shell-body">
+    <main class="main">
+      <header class="page-head">
+        <p class="eyebrow">Module</p>
+        <h1>Appointments</h1>
+        <p class="lead">{{ isAdmin ? 'Create, update, or cancel appointment records.' : isDoctor ? 'View your patients and their appointments.' : 'View and book your appointments.' }}</p>
+      </header>
+
+      @if (errorMessage(); as err) {
+        <div class="alert" role="alert">{{ err }}</div>
+      }
+
+      @if (isAdmin || isPatient) {
+        <section class="panel">
+          <div class="panel-header">
+            <h2>{{ editingId() === null ? 'Book appointment' : 'Edit appointment' }}</h2>
+          </div>
+          <div class="panel-body">
+            <form [formGroup]="form" (ngSubmit)="submit()">
+              <div class="grid two">
+                <label class="field">
+                  <span class="field-label">Patient</span>
+                  <select formControlName="patientId">
+                    <option [value]="0" disabled>Select patient</option>
+                    @for (p of patients(); track p.id) {
+                      <option [value]="p.id">{{ p.firstName }} {{ p.lastName }}</option>
+                    }
+                  </select>
+                </label>
+                <label class="field">
+                  <span class="field-label">Doctor</span>
+                  <select formControlName="doctorId">
+                    <option [value]="0" disabled>Select doctor</option>
+                    @for (d of doctors(); track d.id) {
+                      <option [value]="d.id">Dr. {{ d.firstName }} {{ d.lastName }}</option>
+                    }
+                  </select>
+                </label>
+              </div>
+              <div class="grid two">
+                <label class="field">
+                  <span class="field-label">Date & time</span>
+                  <input type="datetime-local" formControlName="scheduledAt" />
+                </label>
+                @if (isAdmin) {
+                  <label class="field">
+                    <span class="field-label">Status</span>
+                    <select formControlName="status">
+                      @for (s of statuses; track s.value) {
+                        <option [value]="s.value">{{ s.label }}</option>
+                      }
+                    </select>
+                  </label>
+                }
+              </div>
+              <div class="grid two">
+                <label class="field">
+                  <span class="field-label">Priority</span>
+                  <select formControlName="priority">
+                    @for (p of priorities; track p.value) {
+                      <option [value]="p.value">{{ p.label }}</option>
+                    }
+                  </select>
+                </label>
+              </div>
+              <label class="field">
+                <span class="field-label">Notes</span>
+                <input type="text" formControlName="notes" placeholder="Optional notes" />
+              </label>
+              <label class="field">
+                <span class="field-label">Description</span>
+                <textarea formControlName="description" placeholder="Describe symptoms or reason for visit" rows="3"></textarea>
+              </label>
+              <div class="actions">
+                <button type="submit" class="primary" [disabled]="saving()">
+                  {{ saving() ? 'Saving…' : editingId() === null ? 'Create' : 'Save' }}
+                </button>
+                @if (editingId() !== null) {
+                  <button type="button" class="secondary" (click)="cancelForm()" [disabled]="saving()">Cancel</button>
+                }
+              </div>
+            </form>
+          </div>
+        </section>
+      }
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>{{ isDoctor ? 'My patients' : 'Schedule' }}</h2>
+          <div class="panel-header-right">
+            <div class="filter-group">
+              <button type="button" class="filter-btn" [class.active]="priorityFilter() === 'ALL'" (click)="priorityFilter.set('ALL')">All</button>
+              <button type="button" class="filter-btn filter-btn-normal" [class.active]="priorityFilter() === 'NORMAL'" (click)="priorityFilter.set('NORMAL')">Normal</button>
+              <button type="button" class="filter-btn filter-btn-critical" [class.active]="priorityFilter() === 'CRITICAL'" (click)="priorityFilter.set('CRITICAL')">Critical</button>
+            </div>
+            <span class="panel-meta">{{ filteredAppointments().length }} appointment(s)</span>
+          </div>
+        </div>
+        <div class="panel-body panel-body-flush">
+            @if (loading()) {
+            <p class="muted">Loading…</p>
+          } @else if (filteredAppointments().length === 0) {
+            <p class="muted">No appointments yet.</p>
+          } @else {
+            <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>When</th>
+                        <th>Patient</th>
+                        <th>Doctor</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Description</th>
+                        @if (isAdmin) {
+                          <th class="th-actions">Actions</th>
+                        }
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (a of filteredAppointments(); track a.id) {
+                        <tr>
+                          <td>{{ a.scheduledAt }}</td>
+                          <td>{{ patientLabel(a.patientId) }}</td>
+                          <td>{{ doctorLabel(a.doctorId) }}</td>
+                          <td><span class="pill pill-{{ a.status.toLowerCase() }}">{{ a.status }}</span></td>
+                          <td><span class="pill pill-{{ a.priority.toLowerCase() }}">{{ a.priority }}</span></td>
+                          <td>{{ a.description || '—' }}</td>
+                          @if (isAdmin) {
+                            <td class="row-actions">
+                              <button type="button" class="btn-table" (click)="startEdit(a)">Edit</button>
+                              <button type="button" class="btn-table btn-table-danger" (click)="deleteAppointment(a)">Delete</button>
+                            </td>
+                          }
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+            </div>
+          }
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+

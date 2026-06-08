@@ -1,0 +1,121 @@
+<div class="shell">
+  <header class="top">
+    <div class="top-inner">
+      <div class="brand-row">
+        <a routerLink="/dashboard" class="brand-link">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span class="brand">Hospital portal</span>
+        </a>
+        <a routerLink="/dashboard" class="nav-pill nav-pill-muted">
+          <span class="nav-pill-icon" aria-hidden="true">←</span>
+          Dashboard
+        </a>
+      </div>
+      @if (auth.user(); as u) {
+        <div class="user-strip">
+          <div class="user-meta">
+            <span class="user-name">{{ u.firstName }} {{ u.lastName }}</span>
+            <span class="role-badge">{{ u.role }}</span>
+          </div>
+          <button type="button" class="btn-signout" (click)="logout()">Sign out</button>
+        </div>
+      }
+    </div>
+  </header>
+
+  <div class="shell-body">
+    <main class="main">
+      <header class="page-head">
+        <p class="eyebrow">Module</p>
+        <h1>Doctors</h1>
+        <p class="lead">{{ isAdmin ? 'Create, update, or remove doctor records.' : 'Browse doctors and their specialties.' }}</p>
+      </header>
+
+      @if (errorMessage(); as err) {
+        <div class="alert" role="alert">{{ err }}</div>
+      }
+
+      @if (isAdmin) {
+        <section class="panel">
+          <div class="panel-header">
+            <h2>{{ editingId() === null ? 'Add doctor' : 'Edit doctor' }}</h2>
+          </div>
+          <div class="panel-body">
+            <form [formGroup]="form" (ngSubmit)="submit()">
+              <div class="grid two">
+                <label class="field">
+                  <span class="field-label">First name</span>
+                  <input type="text" formControlName="firstName" />
+                </label>
+                <label class="field">
+                  <span class="field-label">Last name</span>
+                  <input type="text" formControlName="lastName" />
+                </label>
+              </div>
+              <label class="field">
+                <span class="field-label">Specialty</span>
+                <input type="text" formControlName="specialty" />
+              </label>
+              <label class="field">
+                <span class="field-label">Email <span class="field-hint">(optional)</span></span>
+                <input type="email" formControlName="email" />
+              </label>
+              <div class="actions">
+                <button type="submit" class="primary" [disabled]="saving()">
+                  {{ saving() ? 'Saving…' : editingId() === null ? 'Create' : 'Save' }}
+                </button>
+                @if (editingId() !== null) {
+                  <button type="button" class="secondary" (click)="cancelForm()" [disabled]="saving()">Cancel</button>
+                }
+              </div>
+            </form>
+          </div>
+        </section>
+      }
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Directory</h2>
+          <span class="panel-meta">{{ doctors().length }} doctor(s)</span>
+        </div>
+        <div class="panel-body panel-body-flush">
+          @if (loading()) {
+            <p class="muted">Loading…</p>
+          } @else if (doctors().length === 0) {
+            <p class="muted">No doctors yet.</p>
+          } @else {
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Specialty</th>
+                    <th>Email</th>
+                    @if (isAdmin) {
+                      <th class="th-actions">Actions</th>
+                    }
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (d of doctors(); track d.id) {
+                    <tr>
+                      <td>Dr. {{ d.firstName }} {{ d.lastName }}</td>
+                      <td>{{ d.specialty }}</td>
+                      <td>{{ d.email || '—' }}</td>
+                      @if (isAdmin) {
+                        <td class="row-actions">
+                          <button type="button" class="btn-table" (click)="startEdit(d)">Edit</button>
+                          <button type="button" class="btn-table btn-table-danger" (click)="deleteDoctor(d)">Delete</button>
+                        </td>
+                      }
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      </section>
+    </main>
+  </div>
+</div>

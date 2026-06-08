@@ -1,0 +1,173 @@
+<div class="shell">
+  <header class="top">
+    <div class="top-inner">
+      <div class="brand-row">
+        <a routerLink="/dashboard" class="brand-link">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span class="brand">Hospital portal</span>
+        </a>
+        <a routerLink="/dashboard" class="nav-pill nav-pill-muted">
+          <span class="nav-pill-icon" aria-hidden="true">←</span>
+          Dashboard
+        </a>
+        <a routerLink="/doctors" class="nav-pill nav-pill-muted">Doctors</a>
+      </div>
+      @if (auth.user(); as u) {
+        <div class="user-strip">
+          <div class="user-meta">
+            <span class="user-name">{{ u.firstName }} {{ u.lastName }}</span>
+            <span class="role-badge">{{ u.role }}</span>
+          </div>
+          <button type="button" class="btn-signout" (click)="logout()">Sign out</button>
+        </div>
+      }
+    </div>
+  </header>
+
+  <div class="shell-body">
+    <main class="main">
+      @if (loading()) {
+        <p class="muted">Loading doctor details…</p>
+      } @else if (doctor(); as doc) {
+        <header class="page-head">
+          <div class="doc-avatar-lg">{{ doc.firstName[0] }}{{ doc.lastName[0] }}</div>
+          <div class="doc-head-body">
+            <p class="eyebrow">Doctor profile</p>
+            <h1>Dr. {{ doc.firstName }} {{ doc.lastName }}</h1>
+            <div class="head-meta">
+              <span class="spec-badge">{{ doc.specialty }}</span>
+              @if (doc.email) {
+                <span class="email-badge">{{ doc.email }}</span>
+              }
+            </div>
+          </div>
+        </header>
+
+        @if (errorMessage(); as err) {
+          <div class="alert" role="alert">{{ err }}</div>
+        }
+
+        @if (!isDoctor) {
+          <section class="panel">
+            <div class="panel-header">
+              <h2>Book an appointment</h2>
+            </div>
+            <div class="panel-body">
+              <form [formGroup]="bookingForm" (ngSubmit)="bookAppointment()">
+                @if (!isPatient) {
+                  <label class="field">
+                    <span class="field-label">Patient</span>
+                    <select formControlName="patientId">
+                      <option [value]="0" disabled>Select patient</option>
+                      @for (p of patients(); track p.id) {
+                        <option [value]="p.id">{{ p.firstName }} {{ p.lastName }}</option>
+                      }
+                    </select>
+                  </label>
+                }
+                <label class="field">
+                  <span class="field-label">Date & time</span>
+                  <input type="datetime-local" formControlName="scheduledAt" />
+                </label>
+                <label class="field">
+                  <span class="field-label">Priority</span>
+                  <select formControlName="priority">
+                    @for (p of priorities; track p.value) {
+                      <option [value]="p.value">{{ p.label }}</option>
+                    }
+                  </select>
+                </label>
+                <label class="field">
+                  <span class="field-label">Description</span>
+                  <textarea formControlName="description" placeholder="Describe your symptoms or reason for visit" rows="3"></textarea>
+                </label>
+                <div class="actions">
+                  <button type="submit" class="primary" [disabled]="saving()">
+                    {{ saving() ? 'Booking…' : 'Book appointment' }}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </section>
+        }
+
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Upcoming appointments</h2>
+            <span class="panel-meta">{{ upcoming.length }} upcoming</span>
+          </div>
+          <div class="panel-body panel-body-flush">
+            @if (upcoming.length === 0) {
+              <p class="muted" style="padding: 1rem 1.5rem;">No upcoming appointments.</p>
+            } @else {
+              <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>When</th>
+                        <th>Patient</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (a of upcoming; track a.id) {
+                        <tr>
+                          <td>{{ a.scheduledAt }}</td>
+                          <td>{{ getPatientName(a) }}</td>
+                          <td><span class="pill pill-scheduled">{{ a.status }}</span></td>
+                          <td><span class="pill pill-{{ a.priority.toLowerCase() }}">{{ a.priority }}</span></td>
+                          <td>{{ a.description || '—' }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+              </div>
+            }
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Past appointments</h2>
+            <span class="panel-meta">{{ past.length }} past</span>
+          </div>
+          <div class="panel-body panel-body-flush">
+            @if (past.length === 0) {
+              <p class="muted" style="padding: 1rem 1.5rem;">No past appointments.</p>
+            } @else {
+              <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>When</th>
+                        <th>Patient</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (a of past; track a.id) {
+                        <tr>
+                          <td>{{ a.scheduledAt }}</td>
+                          <td>{{ getPatientName(a) }}</td>
+                          <td><span class="pill"
+                            [class.pill-scheduled]="a.status === 'SCHEDULED'"
+                            [class.pill-completed]="a.status === 'COMPLETED'"
+                            [class.pill-cancelled]="a.status === 'CANCELLED'">{{ a.status }}</span></td>
+                          <td><span class="pill pill-{{ a.priority.toLowerCase() }}">{{ a.priority }}</span></td>
+                          <td>{{ a.description || '—' }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+              </div>
+            }
+          </div>
+        </section>
+      }
+    </main>
+  </div>
+</div>

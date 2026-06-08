@@ -1,0 +1,249 @@
+<div class="shell">
+  <header class="top">
+    <div class="top-inner">
+      <div class="brand-row">
+        <a routerLink="/dashboard" class="brand-link">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span class="brand">Hospital portal</span>
+        </a>
+        <a routerLink="/doctors" class="nav-pill nav-pill-muted">Doctors</a>
+        <a routerLink="/appointments" class="nav-pill nav-pill-muted">Appointments</a>
+        @if (auth.user()?.role === 'ADMIN') {
+          <a routerLink="/users" class="nav-pill">
+            <span class="nav-pill-icon" aria-hidden="true">◆</span>
+            Manage users
+          </a>
+        }
+      </div>
+      @if (auth.user(); as u) {
+        <div class="user-strip">
+          <div class="user-meta">
+            <span class="user-name">{{ u.firstName }} {{ u.lastName }}</span>
+            <span class="role-badge">{{ u.role }}</span>
+          </div>
+          <button type="button" class="btn-signout" (click)="logout()">Sign out</button>
+        </div>
+      }
+    </div>
+  </header>
+
+  <div class="shell-body">
+    <main class="main">
+      <header class="page-head">
+        <p class="eyebrow">Overview</p>
+        <h1>Dashboard</h1>
+        <p class="lead">{{ isPatient ? 'Find available doctors and manage your appointments.' : isDoctor ? 'View your schedule and patient appointments.' : 'Monitor doctors, appointments, and activity at a glance.' }}</p>
+      </header>
+
+      <div class="stat-cards">
+        <button type="button" class="stat-card" [class.active]="filter() === 'all'" [class.loading]="loadingDoctors()" (click)="setFilter('all')">
+          <span class="stat-value">{{ doctors().length }}</span>
+          <span class="stat-label">Total doctors</span>
+        </button>
+        <button type="button" class="stat-card stat-card-green" [class.active]="filter() === 'available'" [class.loading]="!loaded" (click)="setFilter('available')">
+          <span class="stat-value">{{ availableDoctors.length }}</span>
+          <span class="stat-label">Available</span>
+        </button>
+        <button type="button" class="stat-card stat-card-red" [class.active]="filter() === 'busy'" [class.loading]="!loaded" (click)="setFilter('busy')">
+          <span class="stat-value">{{ busyDoctors.length }}</span>
+          <span class="stat-label">Busy</span>
+        </button>
+        <button type="button" class="stat-card stat-card-blue" [class.active]="filter() === 'appointments'" [class.loading]="loadingAppointments()" (click)="setFilter('appointments')">
+          <span class="stat-value">{{ todayAppointments.length }}</span>
+          <span class="stat-label">{{ isPatient ? 'My appointments today' : isDoctor ? 'My appointments today' : 'Appointments today' }}</span>
+        </button>
+      </div>
+
+      @if (!isDoctor && filter() !== 'appointments') {
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Doctors</h2>
+            <span class="panel-meta">{{ filteredDoctors.length }} doctor(s)</span>
+          </div>
+          @if (loadingDoctors()) {
+            <p class="muted" style="padding: 1.15rem 1.35rem;">Loading doctors…</p>
+          } @else if (filteredDoctors.length === 0) {
+            <p class="muted" style="padding: 1.15rem 1.35rem;">No doctors to show.</p>
+          } @else {
+            <div class="doctor-grid">
+              @for (d of filteredDoctors; track d.id) {
+                <a [routerLink]="['/doctors', d.id]" class="doctor-card">
+                  <div class="dc-avatar">{{ d.firstName[0] }}{{ d.lastName[0] }}</div>
+                  <div class="dc-info">
+                    <strong>Dr. {{ d.firstName }} {{ d.lastName }}</strong>
+                    <span class="dc-spec">{{ d.specialty }}</span>
+                  </div>
+                  <span class="dc-arrow" aria-hidden="true">→</span>
+                </a>
+              }
+            </div>
+          }
+        </section>
+      }
+
+      @if (isDoctor) {
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Waiting appointments</h2>
+            <span class="panel-meta">{{ upcomingAppointments().length }} upcoming</span>
+          </div>
+          <div class="panel-body panel-body-flush">
+            @if (upcomingAppointments().length === 0) {
+              <p class="muted" style="padding: 1rem 1.5rem;">No upcoming appointments.</p>
+            } @else {
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>When</th>
+                      <th>Patient</th>
+                      <th>Doctor</th>
+                      <th>Status</th>
+                      <th>Priority</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (a of upcomingAppointments(); track a.id) {
+                      <tr>
+                        <td>{{ a.scheduledAt }}</td>
+                        <td>{{ getPatientName(a) }}</td>
+                        <td>{{ getDoctorName(a) }}</td>
+                        <td><span class="pill pill-{{ a.status.toLowerCase() }}">{{ a.status }}</span></td>
+                        <td><span class="pill pill-{{ a.priority.toLowerCase() }}">{{ a.priority }}</span></td>
+                        <td>{{ a.description || '—' }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Appointment history</h2>
+            <span class="panel-meta">{{ pastAppointments().length }} past</span>
+          </div>
+          <div class="panel-body panel-body-flush">
+            @if (pastAppointments().length === 0) {
+              <p class="muted" style="padding: 1rem 1.5rem;">No past appointments.</p>
+            } @else {
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>When</th>
+                      <th>Patient</th>
+                      <th>Doctor</th>
+                      <th>Status</th>
+                      <th>Priority</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (a of pastAppointments(); track a.id) {
+                      <tr>
+                        <td>{{ a.scheduledAt }}</td>
+                        <td>{{ getPatientName(a) }}</td>
+                        <td>{{ getDoctorName(a) }}</td>
+                        <td><span class="pill"
+                          [class.pill-scheduled]="a.status === 'SCHEDULED'"
+                          [class.pill-completed]="a.status === 'COMPLETED'"
+                          [class.pill-cancelled]="a.status === 'CANCELLED'">{{ a.status }}</span></td>
+                        <td><span class="pill pill-{{ a.priority.toLowerCase() }}">{{ a.priority }}</span></td>
+                        <td>{{ a.description || '—' }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        </section>
+      } @else {
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Upcoming appointments</h2>
+            <span class="panel-meta">{{ upcomingAppointments().length }} upcoming</span>
+          </div>
+          <div class="panel-body panel-body-flush">
+            @if (upcomingAppointments().length === 0) {
+              <p class="muted" style="padding: 1rem 1.5rem;">No upcoming appointments.</p>
+            } @else {
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>When</th>
+                      <th>Patient</th>
+                      <th>Doctor</th>
+                      <th>Status</th>
+                      <th>Priority</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (a of upcomingAppointments(); track a.id) {
+                      <tr>
+                        <td>{{ a.scheduledAt }}</td>
+                        <td>{{ getPatientName(a) }}</td>
+                        <td>{{ getDoctorName(a) }}</td>
+                        <td><span class="pill pill-scheduled">{{ a.status }}</span></td>
+                        <td><span class="pill pill-{{ a.priority.toLowerCase() }}">{{ a.priority }}</span></td>
+                        <td>{{ a.description || '—' }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Appointment history</h2>
+            <span class="panel-meta">{{ pastAppointments().length }} past</span>
+          </div>
+          <div class="panel-body panel-body-flush">
+            @if (pastAppointments().length === 0) {
+              <p class="muted" style="padding: 1rem 1.5rem;">No past appointments.</p>
+            } @else {
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>When</th>
+                      <th>Patient</th>
+                      <th>Doctor</th>
+                      <th>Status</th>
+                      <th>Priority</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (a of pastAppointments(); track a.id) {
+                      <tr>
+                        <td>{{ a.scheduledAt }}</td>
+                        <td>{{ getPatientName(a) }}</td>
+                        <td>{{ getDoctorName(a) }}</td>
+                        <td><span class="pill"
+                          [class.pill-scheduled]="a.status === 'SCHEDULED'"
+                          [class.pill-completed]="a.status === 'COMPLETED'"
+                          [class.pill-cancelled]="a.status === 'CANCELLED'">{{ a.status }}</span></td>
+                        <td><span class="pill pill-{{ a.priority.toLowerCase() }}">{{ a.priority }}</span></td>
+                        <td>{{ a.description || '—' }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        </section>
+      }
+    </main>
+  </div>
+</div>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Hospital Appointment System — Structure</title>
+  <style>
+    @page { size: A4; margin: 18mm; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 11pt; line-height: 1.45; color: #111; max-width: 720px; margin: 0 auto; }
+    h1 { font-size: 16pt; margin: 0 0 12px; border-bottom: 2px solid #0d9488; padding-bottom: 6px; }
+    h2 { font-size: 12pt; margin: 18px 0 8px; color: #0f172a; }
+    p { margin: 6px 0; }
+    table { width: 100%; border-collapse: collapse; margin: 8px 0 14px; font-size: 10pt; }
+    th, td { border: 1px solid #cbd5e1; padding: 6px 8px; text-align: left; vertical-align: top; }
+    th { background: #f1f5f9; font-weight: 600; }
+    ul { margin: 6px 0; padding-left: 1.2em; }
+    li { margin: 3px 0; }
+    .muted { color: #475569; font-size: 10pt; margin-top: 16px; }
+    code { font-size: 9.5pt; background: #f8fafc; padding: 1px 4px; }
+  </style>
+</head>
+<body>
+  <h1>Hospital Appointment System — Project structure</h1>
+  <p><strong>Purpose:</strong> Two-part web application: <strong>Angular</strong> UI + <strong>Spring Boot</strong> REST API. Data in a <strong>SQLite</strong> file. Authentication uses <strong>JWT</strong> with roles (Patient, Doctor, Receptionist, Admin).</p>
+
+  <h2>Top-level layout</h2>
+  <table>
+    <tr><th>Path</th><th>Role</th></tr>
+    <tr><td><code>backend/</code></td><td>REST API (Java 17, Maven), security, JPA persistence</td></tr>
+    <tr><td><code>frontend/</code></td><td>Single-page app (Angular 20), calls <code>/api</code></td></tr>
+    <tr><td><code>README.md</code></td><td>Vision: actors &amp; future modules (appointments, doctors, …)</td></tr>
+    <tr><td><code>docs/</code></td><td>This overview</td></tr>
+  </table>
+  <p class="muted">Omit build caches when presenting source: <code>frontend/dist/</code>, <code>frontend/.angular/cache/</code>.</p>
+
+  <h2>Backend (<code>backend/</code>)</h2>
+  <ul>
+    <li><code>pom.xml</code> — Spring Web, Security, Data JPA, Validation, JWT (jjwt), SQLite JDBC</li>
+    <li><code>mvnw.cmd</code> — Maven wrapper</li>
+    <li><code>src/main/resources/application.properties</code> — port 8080, SQLite <code>./data/hospital.db</code>, JWT &amp; seeded admin</li>
+    <li><code>HospitalApiApplication.java</code> — Spring Boot entry point</li>
+    <li><code>domain/</code> — <code>User</code> entity, <code>Role</code> enum</li>
+    <li><code>repository/</code> — <code>UserRepository</code></li>
+    <li><code>api/auth/</code> — register, login, <code>/me</code>; DTOs; <code>AuthService</code></li>
+    <li><code>api/admin/</code> — admin-only user CRUD under <code>/api/admin/users</code></li>
+    <li><code>api/</code> — health check, global exception handler</li>
+    <li><code>security/</code> — JWT filter &amp; service, <code>UserPrincipal</code>, user-details loading</li>
+    <li><code>config/</code> — security chain, CORS, data seed, SQLite folder helper</li>
+    <li><code>src/test/</code> — Boot tests; in-memory SQLite profile</li>
+  </ul>
+  <p><strong>Runtime DB file:</strong> <code>backend/data/hospital.db</code> when the API is started from <code>backend/</code>.</p>
+
+  <h2>Frontend (<code>frontend/</code>)</h2>
+  <ul>
+    <li><code>package.json</code> / <code>angular.json</code> — Angular 20; dev proxy to port 8080 for <code>/api</code></li>
+    <li><code>proxy.conf.json</code> — forwards <code>/api</code> to Spring</li>
+    <li><code>src/app/app.config.ts</code> — router, HTTP client, auth interceptor</li>
+    <li><code>src/app/app.routes.ts</code> — login, register, dashboard, users (admin)</li>
+    <li><code>src/app/auth/</code> — login &amp; register pages, <code>AuthService</code>, guards, models</li>
+    <li><code>src/app/dashboard/</code> — post-login home</li>
+    <li><code>src/app/users/</code> — admin user management + <code>UsersService</code></li>
+  </ul>
+
+  <h2>Dev request path</h2>
+  <p>Browser → <code>localhost:4200</code> (Angular) → relative <code>/api/…</code> → <strong>proxy</strong> → <code>localhost:8080</code> (Spring). After login, requests include <code>Authorization: Bearer …</code>.</p>
+
+  <h2>README vs. code today</h2>
+  <p><strong>In code:</strong> auth, JWT, roles, admin user directory, dashboard shell.</p>
+  <p><strong>In README only (future):</strong> appointments, doctors, medical records, notifications, analytics.</p>
+
+  <p class="muted">Short structure guide for presentations — not a full specification.</p>
+</body>
+</html>

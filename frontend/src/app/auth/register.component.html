@@ -1,0 +1,73 @@
+<div class="auth-page">
+  <div class="auth-bg" aria-hidden="true"></div>
+  <div class="auth-content auth-content-wide">
+    <header class="auth-brand">
+      <div class="auth-brand-mark" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 4v16M8 8h8M8 16h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+      </div>
+      <div class="auth-brand-titles">
+        <span class="auth-brand-name">Hospital</span>
+        <span class="auth-brand-sub">Appointment suite</span>
+      </div>
+    </header>
+
+    <div class="card card-wide">
+      <div class="card-head">
+        <h1>Create account</h1>
+        <p class="sub">New accounts are registered as patients. Staff roles are assigned by an administrator.</p>
+      </div>
+
+      @if (errorMessage(); as err) {
+        <div class="alert" role="alert">{{ err }}</div>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <label class="field">
+          <span class="field-label">Email</span>
+          <input type="email" formControlName="email" autocomplete="email" placeholder="you@email.com" />
+          @if (form.controls.email.touched && form.controls.email.invalid) {
+            <small class="field-error">Valid email required</small>
+          }
+        </label>
+
+        <label class="field">
+          <span class="field-label">Password</span>
+          <input type="password" formControlName="password" autocomplete="new-password" placeholder="At least 8 characters" />
+          @if (form.controls.password.touched && form.controls.password.invalid) {
+            <small class="field-error">At least 8 characters</small>
+          }
+        </label>
+
+        <div class="row">
+          <label class="field">
+            <span class="field-label">First name</span>
+            <input type="text" formControlName="firstName" autocomplete="given-name" />
+          </label>
+          <label class="field">
+            <span class="field-label">Last name</span>
+            <input type="text" formControlName="lastName" autocomplete="family-name" />
+          </label>
+        </div>
+        @if (
+          (form.controls.firstName.touched && form.controls.firstName.invalid) ||
+          (form.controls.lastName.touched && form.controls.lastName.invalid)
+        ) {
+          <small class="field-error row-error">First and last name are required</small>
+        }
+
+        <button type="submit" class="primary" [disabled]="submitting()">
+          {{ submitting() ? 'Creating…' : 'Create account' }}
+        </button>
+      </form>
+
+      <p class="footer">
+        Already have an account?
+        <a routerLink="/login">Sign in</a>
+      </p>
+    </div>
+
+    <p class="auth-footnote">Secure access · Internal use</p>
+  </div>
+</div>

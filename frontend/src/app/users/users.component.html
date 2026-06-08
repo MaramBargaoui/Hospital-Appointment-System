@@ -1,0 +1,156 @@
+<div class="shell">
+  <header class="top">
+    <div class="top-inner">
+      <div class="brand-row">
+        <a routerLink="/dashboard" class="brand-link">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span class="brand">Hospital portal</span>
+        </a>
+        <a routerLink="/dashboard" class="nav-pill nav-pill-muted">
+          <span class="nav-pill-icon" aria-hidden="true">←</span>
+          Dashboard
+        </a>
+      </div>
+      @if (auth.user(); as u) {
+        <div class="user-strip">
+          <div class="user-meta">
+            <span class="user-name">{{ u.firstName }} {{ u.lastName }}</span>
+            <span class="role-badge">{{ u.role }}</span>
+          </div>
+          <button type="button" class="btn-signout" (click)="logout()">Sign out</button>
+        </div>
+      }
+    </div>
+  </header>
+
+  <div class="shell-body">
+    <main class="main">
+      <header class="page-head">
+        <p class="eyebrow">Administration</p>
+        <h1>User management</h1>
+        <p class="lead">
+          Create, update, or remove accounts. You cannot delete your own user or remove the last administrator.
+        </p>
+      </header>
+
+      @if (errorMessage(); as err) {
+        <div class="alert" role="alert">{{ err }}</div>
+      }
+
+      <section class="panel form-panel">
+        <div class="panel-header">
+          <h2>{{ editingId() === null ? 'Add user' : 'Edit user' }}</h2>
+          @if (editingId() !== null) {
+            <span class="panel-tag panel-tag-warn">Editing</span>
+          } @else {
+            <span class="panel-tag">New record</span>
+          }
+        </div>
+        <div class="panel-body">
+          <form [formGroup]="form" (ngSubmit)="submit()">
+            <div class="grid">
+              <label class="field">
+                <span class="field-label">Email</span>
+                <input type="email" formControlName="email" autocomplete="off" placeholder="name@organization.com" />
+                @if (form.controls.email.touched && form.controls.email.invalid) {
+                  <small class="field-error">Valid email required</small>
+                }
+              </label>
+              <label class="field">
+                <span class="field-label">
+                  Password
+                  @if (editingId() !== null) {
+                    <span class="field-hint">(optional)</span>
+                  }
+                </span>
+                <input
+                  type="password"
+                  formControlName="password"
+                  autocomplete="new-password"
+                  [attr.placeholder]="editingId() !== null ? 'Leave blank to keep current' : 'Minimum 8 characters'"
+                />
+                @if (form.controls.password.touched && form.controls.password.invalid) {
+                  <small class="field-error">At least 8 characters when setting a password</small>
+                }
+              </label>
+            </div>
+            <div class="grid two">
+              <label class="field">
+                <span class="field-label">First name</span>
+                <input type="text" formControlName="firstName" placeholder="Given name" />
+              </label>
+              <label class="field">
+                <span class="field-label">Last name</span>
+                <input type="text" formControlName="lastName" placeholder="Family name" />
+              </label>
+            </div>
+            <label class="field field-full">
+              <span class="field-label">Role</span>
+              <div class="select-wrap">
+                <select formControlName="role">
+                  @for (r of roles; track r.value) {
+                    <option [value]="r.value">{{ r.label }}</option>
+                  }
+                </select>
+              </div>
+            </label>
+            <div class="actions">
+              <button type="submit" class="primary" [disabled]="saving()">
+                {{ saving() ? 'Saving…' : editingId() === null ? 'Create user' : 'Save changes' }}
+              </button>
+              @if (editingId() !== null) {
+                <button type="button" class="secondary" (click)="cancelForm()" [disabled]="saving()">Cancel</button>
+              }
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section class="panel table-panel">
+        <div class="panel-header">
+          <h2>Directory</h2>
+          <span class="panel-meta">{{ users().length }} user{{ users().length === 1 ? '' : 's' }}</span>
+        </div>
+        <div class="panel-body panel-body-flush">
+          @if (loading()) {
+            <div class="loading-state" aria-busy="true">
+              <div class="loading-bar"></div>
+              <p>Loading directory…</p>
+            </div>
+          } @else if (users().length === 0) {
+            <div class="empty-state">
+              <p class="empty-title">No users yet</p>
+              <p class="empty-text">Create the first account using the form above.</p>
+            </div>
+          } @else {
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Email</th>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th class="th-actions">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (u of users(); track u.id) {
+                    <tr>
+                      <td class="td-email">{{ u.email }}</td>
+                      <td>{{ u.firstName }} {{ u.lastName }}</td>
+                      <td><span class="pill">{{ u.role }}</span></td>
+                      <td class="row-actions">
+                        <button type="button" class="btn-table" (click)="startEdit(u)">Edit</button>
+                        <button type="button" class="btn-table btn-table-danger" (click)="deleteUser(u)">Delete</button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      </section>
+    </main>
+  </div>
+</div>

@@ -1,0 +1,26 @@
+@use './login.component.scss';
+
+.auth-content-wide {
+  max-width: 480px;
+}
+
+.card-wide {
+  max-width: 100%;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 520px) {
+  .row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.row-error {
+  display: block;
+  margin-top: -0.35rem;
+}

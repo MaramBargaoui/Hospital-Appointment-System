@@ -1,0 +1,23 @@
+# Backend
+backend/data/
+backend/hospital.db
+backend/*.db
+backend/*.log
+backend/*.err
+backend/target/
+backend/.classpath
+backend/.project
+backend/.settings/
+fix_db.py
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+
+# IDE / OS
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
